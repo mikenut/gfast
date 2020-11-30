@@ -10,13 +10,13 @@ import (
 
 //设置用户状态参数
 type StatusReq struct {
-	Id         int  `p:"userId" v:"required#用户id不能为空"`
-	UserStatus uint `p:"status" v:"required#用户状态不能为空"`
+	Id         uint64 `p:"userId" v:"required#用户id不能为空"`
+	UserStatus uint   `p:"status" v:"required#用户状态不能为空"`
 }
 
 //重置用户密码状态参数
 type ResetPwdReq struct {
-	Id       int    `p:"userId" v:"required#用户id不能为空"`
+	Id       uint64 `p:"userId" v:"required#用户id不能为空"`
 	Password string `p:"password" v:"required|password#密码不能为空|密码以字母开头，只能包含字母、数字和下划线，长度在6~18之间"`
 }
 
@@ -86,8 +86,8 @@ func Add(req *AddUserReq) (InsertId int64, err error) {
 	entity.UserNickname = req.NickName
 	entity.UserPassword = req.Password
 	entity.Remark = req.Remark
-
-	res, err := entity.Save()
+	entity.IsAdmin = req.IsAdmin
+	res, err := Model.Save(entity)
 	if err != nil {
 		return
 	}
@@ -117,7 +117,7 @@ func Edit(req *EditUserReq) (err error) {
 	entity.UserNickname = req.NickName
 	entity.Remark = req.Remark
 	entity.IsAdmin = req.IsAdmin
-	_, err = entity.Update()
+	_, err = Model.Save(entity)
 	if err != nil {
 		g.Log().Error(err)
 		err = gerror.New("修改用户信息失败")
@@ -172,7 +172,7 @@ func ChangeUserStatus(req *StatusReq) error {
 		return gerror.New("用户不存在")
 	}
 	user.UserStatus = req.UserStatus
-	_, err = user.Update()
+	_, err = Model.Save(user)
 	if err != nil {
 		g.Log().Error(err)
 		return gerror.New("修改用户状态失败")
@@ -188,7 +188,7 @@ func ResetUserPwd(req *ResetPwdReq) error {
 		return gerror.New("用户不存在")
 	}
 	user.UserPassword = req.Password
-	_, err = user.Update()
+	_, err = Model.Save(user)
 	if err != nil {
 		g.Log().Error(err)
 		return gerror.New("修改用户密码失败")
